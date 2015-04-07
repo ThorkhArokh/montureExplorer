@@ -1,0 +1,21 @@
+@media (max-width: 480px) {
+    #monturesList .resume {
+        height: 35px;
+    }
+    
+    #recherche {
+        width: 100%;
+    }
+    
+    .form-control {
+        width: 50%;
+    }
+    
+    .loginLbl {
+    	display: none;
+    }
+    
+    #loginForm .form-control {
+        width: 100%;
+    }
+}

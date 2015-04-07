@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html ng-app="monturesApp">
+    <head>
+        <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+
+        <link rel="stylesheet" href="js/lib/mobile-angular-ui/css/mobile-angular-ui-hover.min.css" />
+        <link rel="stylesheet" href="js/lib/mobile-angular-ui/css/mobile-angular-ui-base.min.css" />
+        <link rel="stylesheet" href="js/lib/mobile-angular-ui/css/mobile-angular-ui-desktop.min.css" />
+
+        <link rel="stylesheet" href="css/core.css">
+        <link rel="stylesheet" href="css/smartphone.css">
+
+        <script src="js/lib/angular.js"></script>
+        <script src="js/lib/angular-resouce.js"></script> 
+        <script src="js/lib/angular-route.js"></script>
+        <script src="js/lib/angular-sanitize.js"></script>
+        <script src="js/lib/mobile-angular-ui/js/mobile-angular-ui.min.js"></script>
+        <script src="js/lib/mobile-angular-ui/js/mobile-angular-ui.gestures.min.js"></script>
+
+        <script src="js/montureApp.js"></script>
+        <script src="js/loginService.js"></script>
+        <script src="js/montureModule/montureModule.js"></script>
+        <script src="js/montureModule/montureController.js"></script>
+        <script src="js/montureModule/montureService.js"></script>
+        <title></title>
+    </head>
+    <body ng-controller="MonturesListCtrl">
+
+        <div class="sidebar sidebar-left scrollable" ui-track-as-search-param='true'>
+            <h1 class="scrollable-header app-name">Filtres</h1>  
+            <div class="scrollable-content">
+                <div class="list-group" >
+                	<div ng-show="connect" class="list-group-item">
+                        <label>Afficher uniquement les favoris</label>
+                        <ui-switch ng-model='showFavoris'></ui-switch>
+                    </div>
+                    <div ng-show="connect" class="list-group-item">
+                        <label>Masquer montures obtenues</label>
+                        <ui-switch ng-model='masquerObtenues'></ui-switch>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="form-group">
+                            <label>Faction</label>
+                            <select ng-model="factionChoix" class="form-control" name="select"
+                                    ng-options="faction.id as faction.nom for faction in factionsList">
+                                <option value="">Toutes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select ng-model="typeChoix" class="form-control" name="select"
+                                    ng-options="type.id as type.libelle for type in typesList">
+                                <option value="">Tous</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app" ng-swipe-right='Ui.turnOn("uiSidebarLeft")' ng-swipe-left='Ui.turnOff("uiSidebarLeft")'>
+            <div class="navbar navbar-app navbar-absolute-bottom">
+                <div class="navbar-brand navbar-brand-center" >
+                    <div ng-show="erreurMessage" class="erreur pull-left"><i class="fa fa-exclamation-circle"></i> {{erreurMessage}}</div>
+                    <div ng-hide="erreurMessage" class="btn-group pull-right"><i class="fa fa-pie-chart"></i> {{listFiltree.length}}/{{montureList.length}}</div>
+                </div>
+            </div>
+            
+            <div class="navbar navbar-app navbar-absolute-top">
+                <div class="btn-group pull-left">
+                    <div ui-toggle="uiSidebarLeft" class="btn sidebar-toggle">
+                        <i class="fa fa-bars"></i> Filtres
+                    </div>
+                </div>
+                <div class="btn-group pull-left">
+                    <input class="form-control" id="recherche" type="text" ng-model="query" placeholder="Recherche..." ng-model-options="{debounce: 500}">
+                </div>
+                <div class="btn-group pull-right">
+                    <div class="btn">
+                		<a ng-hide="connect" ng-click="connectUser()" href="#"><i class="fa fa-2x" ng-class="{true: 'fa-ban', false: 'fa-sign-in'}[showLogin]"></i></a>
+                		<a ng-show="connect" ng-click="disconnectUser()" href="#"><span class="loginLbl">{{loginStr}}</span> <i class="fa fa-2x fa-sign-out"></i></a>
+                	</div>
+                </div>
+            </div>
+
+            <div class="app-body" ng-class="{loading: loading}">
+            	<div ng-show="showLogin" class="app-content">
+            	<div class="scrollable">
+                    <div class="scrollable-content">
+            		<form id="loginForm" role="form" ng-submit='login()'>
+            		<div class="form-group">
+	            		<label>Login</label>
+	            		<input class="form-control" type="text" ng-model="loginStr"/>
+	            	</div>
+	            	<div class="form-group">
+	            		<label>Password</label>
+	            		<input class="form-control" type="password" ng-model="passwordStr" />
+	            	</div>
+	            		<input class='btn btn-primary btn-block' type="button" value="OK" ng-click="login()"/>
+            		</form>
+            		</div>
+            		</div>
+            	</div>
+                <div ng-show="loading" class="app-content-loading">
+                    <i class="fa fa-2x fa-spinner fa-spin loading-spinner"></i>
+                </div>
+                <div class="app-content">
+                <div class="scrollable">
+                    <div class="scrollable-content">
+                        <div id="monturesList">
+                            <ul class="list-group-item">
+                                <li ng-repeat="monture in listFiltree = (montureList | filter :query | factionFiltre:factionChoix | typeFiltre:typeChoix | masquerObtenuesFiltre:masquerObtenues | showFavorisFiltre:showFavoris) | limitTo:pageSize track by monture.id">
+                                    <div class="list-group-item" ng-class="{'1': 'fondAlliance', '2': 'fondHorde'}[monture.faction.id]">
+                                        <div class="resume">
+                                            <img ng-show="connect" ng-click="checkMonture(monture.id)" ng-class="{true: 'image', false: 'grise'}[monture.isObtenu]" src="http://fc01.deviantart.net/fs71/f/2013/120/2/5/chrome_icon___blue_black_by_jrathage-d63ks4s.png"/>
+                                            <img ng-hide="connect" class="grise" src="http://fc01.deviantart.net/fs71/f/2013/120/2/5/chrome_icon___blue_black_by_jrathage-d63ks4s.png"/>
+                                            <span class="nom" ng-click="row.selected = !row.selected" >{{monture.nom}}</span>
+                                            <a ng-show="connect" href="#" ng-click="checkFavoris(monture.id)"><i class="fa" ng-class="{true: 'fa-star', false: 'fa-star-o'}[monture.isFavoris]"></i></a>
+                                        </div>
+                                        <div ng-class="{'description':row.selected, 'descriptionOff':!row.selected}">
+                                            <p ng-bind-html="monture.description"></p>
+                                            <i class="fa fa-money"></i> <span ng-bind-html="monture.cout"></span><br/>
+                                            <i class="fa fa-user"></i> <span ng-bind-html="monture.pnj"></span><br/>
+                                            <i class="fa fa-map-marker"></i> <span ng-bind-html="monture.lieu"></span><br/>
+                                            <i class="fa fa-smile-o"></i> <span ng-bind-html="monture.reputation"></span><br/>
+                                            <i class="fa fa-check-square-o"></i> <span ng-bind-html="monture.prerequis"></span>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                            
+                            <input ng-hide="query" class='btn btn-primary btn-block' type="button" value="Afficher plus" ng-click="showMore()"/>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
